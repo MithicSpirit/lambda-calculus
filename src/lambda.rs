@@ -1,32 +1,30 @@
 #![allow(non_camel_case_types)]
 mod r#fn;
 
-use dyn_clone::{clone_box, DynClone};
+use std::rc::Rc;
 
 #[derive(Clone)]
-pub struct λ(Box<dyn Lambdable>);
-
-pub trait Lambdable: FnMut(λ) -> λ + DynClone + NotLambda {}
-dyn_clone::clone_trait_object!(Lambdable);
-impl<T> Lambdable for T where T: FnMut(λ) -> λ + DynClone + NotLambda {}
-
-pub auto trait NotLambda {}
-//impl !NotLambda for λ {}
-
+pub struct λ(Rc<dyn Lambdable>); // defined as λ for nice compiler output
 pub type Lambda = λ;
 
-impl λ
+pub trait Lambdable: Fn(Lambda) -> Lambda + NotLambda {}
+impl<T> Lambdable for T where T: Fn(Lambda) -> Lambda + NotLambda {}
+
+pub auto trait NotLambda {}
+//impl !NotLambda for Lambda {}
+
+impl Lambda
 {
 	pub fn new<T: Lambdable + 'static>(f: T) -> Self
 	{
-		λ(clone_box(&f))
+		λ(Rc::new(f))
 	}
 }
 
-/* impl<T: Lambdable> From<T> for λ
+/* impl<T: Lambdable> From<T> for Lambda
 {
 	fn from(value: T) -> Self
 	{
-		λ(Box::new(value))
+		Lambda(Box::new(value))
 	}
 } */

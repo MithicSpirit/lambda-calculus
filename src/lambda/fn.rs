@@ -1,18 +1,29 @@
 use super::*;
 
-impl FnOnce<(λ,)> for λ
+impl FnOnce<(Lambda,)> for Lambda
 {
-	type Output = λ;
+	type Output = Lambda;
 
-	extern "rust-call" fn call_once(mut self, args: (λ,)) -> Self::Output
+	extern "rust-call" fn call_once(self, args: (Lambda,)) -> Self::Output
 	{
 		self.0(args.0)
 	}
 }
 
-impl FnMut<(λ,)> for λ
+impl FnMut<(Lambda,)> for Lambda
 {
-	extern "rust-call" fn call_mut(&mut self, args: (λ,)) -> Self::Output
+	extern "rust-call" fn call_mut(
+		&mut self,
+		args: (Lambda,),
+	) -> Self::Output
+	{
+		self.0(args.0)
+	}
+}
+
+impl Fn<(Lambda,)> for Lambda
+{
+	extern "rust-call" fn call(&self, args: (Lambda,)) -> Self::Output
 	{
 		self.0(args.0)
 	}

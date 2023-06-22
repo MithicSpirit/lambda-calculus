@@ -1,8 +1,8 @@
-use crate::lambda::*;
+use crate::Lambda;
 
 pub fn to_lambda(n: u128) -> Lambda
 {
-	Lambda::new(move |mut f: Lambda| -> Lambda {
+	Lambda::new(move |f: Lambda| -> Lambda {
 		Lambda::new(move |mut x: Lambda| -> Lambda {
 			for _ in 0..n {
 				x = f(x);
@@ -14,10 +14,11 @@ pub fn to_lambda(n: u128) -> Lambda
 
 pub fn from_lambda(f: Lambda) -> u128
 {
-	let counter = 0;
-	let cptr: *const u128 = &counter;
+	#[allow(unused_mut)]
+	let mut counter = 0;
+	let cptr = &counter as *const u128 as *mut u128;
 	let count = Lambda::new(move |g: Lambda| -> Lambda {
-		unsafe { *(cptr as *mut u128) += 1 };
+		unsafe { *cptr += 1 };
 		return g;
 	});
 	f.clone()(count)(Lambda::new(id));
