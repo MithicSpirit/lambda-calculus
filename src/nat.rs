@@ -1,3 +1,5 @@
+use std::cell::UnsafeCell;
+
 use crate::Lambda;
 
 pub fn to_lambda(n: u128) -> Lambda
@@ -14,15 +16,16 @@ pub fn to_lambda(n: u128) -> Lambda
 
 pub unsafe fn from_lambda(f: Lambda) -> Option<u128>
 {
-	#[allow(unused_mut)]
-	let mut counter = Some(0);
-	let cptr = &counter as *const _ as *mut Option<u128>;
+	let mut counter = UnsafeCell::new(Some(0));
+	let cptr = counter.get();
+
 	let count = Lambda::new(move |g: Lambda| -> Lambda {
-		unsafe { *cptr = (*cptr).and_then(|x| x.checked_add(1)) };
+		unsafe { *cptr = (*cptr).and_then(|x: u128| x.checked_add(1)) };
 		return g;
 	});
 	f.clone()(count)(Lambda::new(id));
-	return counter;
+
+	return *counter.get_mut();
 }
 
 fn id(f: Lambda) -> Lambda
