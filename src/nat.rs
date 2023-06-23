@@ -12,13 +12,13 @@ pub fn to_lambda(n: u128) -> Lambda
 	})
 }
 
-pub fn from_lambda(f: Lambda) -> u128
+pub unsafe fn from_lambda(f: Lambda) -> Option<u128>
 {
 	#[allow(unused_mut)]
-	let mut counter = 0;
-	let cptr = &counter as *const u128 as *mut u128;
+	let mut counter = Some(0);
+	let cptr = &counter as *const _ as *mut Option<u128>;
 	let count = Lambda::new(move |g: Lambda| -> Lambda {
-		unsafe { *cptr += 1 };
+		unsafe { *cptr = (*cptr).and_then(|x| x.checked_add(1)) };
 		return g;
 	});
 	f.clone()(count)(Lambda::new(id));
@@ -34,11 +34,14 @@ fn id(f: Lambda) -> Lambda
 mod tests
 {
 	use super::*;
+
 	#[test]
 	fn id()
 	{
-		for x in 0..1000 {
-			assert_eq!(x, from_lambda(to_lambda(x)));
+		for x in 0..(u8::MAX as u128) {
+			assert_eq!(Some(x), unsafe {
+				from_lambda(to_lambda(x))
+			});
 		}
 	}
 }
